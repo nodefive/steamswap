@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Define paths
+REGISTRY="$HOME/.steam/registry.vdf"
+STEAM_LINK="$HOME/.steam"
+CONFIG_LINK="$HOME/.local/share/Steam/config"
+
+# Account specific source directories
+# N = kurus_ii, O = otiumdies
+KURUS_STEAM="$HOME/.steam_N"
+KURUS_CONFIG="$HOME/.local/share/Steam/config_N"
+OTIUM_STEAM="$HOME/.steam_O"
+OTIUM_CONFIG="$HOME/.local/share/Steam/config_O"
+
+# 1. Detect current user
+CURRENT_USER=$(grep "AutoLoginUser" "$REGISTRY" | sed 's/.*"AutoLoginUser"[[:space:]]*"\([^"]*\)".*/\1/')
+
+echo "-------------------------------"
+echo "Current User is: $CURRENT_USER"
+echo "-------------------------------"
+
+# 2. Determine target user and sources
+if [ "$CURRENT_USER" == "otiumdies" ]; then
+    OTHER_USER="kurus_ii"
+    TARGET_STEAM=$KURUS_STEAM
+    TARGET_CONFIG=$KURUS_CONFIG
+elif [ "$CURRENT_USER" == "kurus_ii" ]; then
+    OTHER_USER="otiumdies"
+    TARGET_STEAM=$OTIUM_STEAM
+    TARGET_CONFIG=$OTIUM_CONFIG
+else
+    echo "Error: Could not detect a valid user in registry.vdf."
+    exit 1
+fi
+
+# 3. Present Menu
+echo "1) Keep $CURRENT_USER (Exit)"
+echo "2) Swap to $OTHER_USER"
+read -p "Selection: " CHOICE
+
+case $CHOICE in
+    1)
+        echo "Exiting..."
+        exit 0
+        ;;
+    2)
+        echo "Swapping to $OTHER_USER..."
+        
+        # Remove existing symlinks
+        rm -f "$STEAM_LINK"
+        rm -f "$CONFIG_LINK"
+        
+        # Create new symlinks
+        ln -s "$TARGET_STEAM" "$STEAM_LINK"
+        ln -s "$TARGET_CONFIG" "$CONFIG_LINK"
+        
+        echo "Done! You can now launch Steam."
+        ;;
+    *)
+        echo "Invalid selection."
+        exit 1
+        ;;
+esac
